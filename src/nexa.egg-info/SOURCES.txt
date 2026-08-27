@@ -1,7 +1,0 @@
-pyproject.toml
-src/nexa.egg-info/PKG-INFO
-src/nexa.egg-info/SOURCES.txt
-src/nexa.egg-info/dependency_links.txt
-src/nexa.egg-info/top_level.txt
-src/nexa/config/settings.py
-src/nexa/rag/retriever.py
