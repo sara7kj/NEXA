@@ -36,3 +36,22 @@ def test_arabic_headings() -> None:
     chunks = chunk_by_heading(text)
     assert len(chunks) == 2
     assert chunks[0].section == "الإجازة السنوية"
+
+
+def test_front_matter_is_parsed_and_removed() -> None:
+    from nexa.rag.chunker import parse_front_matter
+
+    text = "---\ntitle: Leave Policy\nlanguage: en\n---\n## Section\nBody."
+    meta, body = parse_front_matter(text)
+
+    assert meta["title"] == "Leave Policy"
+    assert meta["language"] == "en"
+    assert not body.startswith("---")
+
+
+def test_text_without_front_matter_is_unchanged() -> None:
+    from nexa.rag.chunker import parse_front_matter
+
+    meta, body = parse_front_matter("## Section\nBody.")
+    assert meta == {}
+    assert body.startswith("## Section")

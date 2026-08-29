@@ -33,3 +33,19 @@ def chunk_by_heading(text: str, default_section: str = "General") -> list[TextCh
             chunks.append(TextChunk(section, f"{section}\n{body}", len(chunks)))
 
     return chunks
+
+FRONT_MATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+
+def parse_front_matter(text: str) -> tuple[dict[str, str], str]:
+    match = FRONT_MATTER.match(text)
+    if not match:
+        return {}, text
+
+    meta: dict[str, str] = {}
+    for line in match.group(1).splitlines():
+        if ":" in line:
+            key, value = line.split(":", 1)
+            meta[key.strip()] = value.strip()
+
+    return meta, text[match.end():]
