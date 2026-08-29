@@ -134,3 +134,13 @@ below 0.85.
 
 Chunking for multi-section documents, then the tool layer, then the
 approval flow.
+---
+
+## Demo
+
+An Arabic query returning an English source document:
+
+![Cross-lingual search](docs/images/demo.png)
+
+The correct English document scores 0.97; the closest Arabic document scores
+0.12. The gap shows the reranker is deciding on meaning, not language.
