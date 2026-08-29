@@ -49,3 +49,9 @@ class Retriever:
             )
             for i in order
         ]
+
+    def load(self, documents: dict[str, str], embeddings: list[list[float]]) -> None:
+        self._ids = list(documents.keys())
+        self._texts = [documents[k] for k in self._ids]
+        self._embeddings = np.array(embeddings, dtype=np.float32)
+
