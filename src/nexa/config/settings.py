@@ -1,4 +1,19 @@
-﻿from dataclasses import dataclass
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+
+
+def _load_env() -> None:
+    env = Path(".env")
+    if not env.exists():
+        return
+    for line in env.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_env()
 
 
 @dataclass(frozen=True)
@@ -11,6 +26,12 @@ class Settings:
 
     retrieve_top_k: int = 5
     rerank_top_n: int = 1
+
+    token_expiry_minutes: int = 30
+
+    jwt_secret: str = field(
+        default_factory=lambda: os.environ["JWT_SECRET"]
+    )
 
 
 settings = Settings()
