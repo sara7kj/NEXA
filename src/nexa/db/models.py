@@ -1,4 +1,4 @@
-from datetime import date, datetime
+﻿from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    JSON,
     Integer,
     Numeric,
     String,
@@ -92,3 +93,71 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class ApprovalRequest(Base):
+    __tablename__ = "approval_requests"
+    __table_args__ = (
+        CheckConstraint(
+            "approver_id IS NULL OR approver_id <> requester_id",
+            name="no_self_approval",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    status: Mapped[str] = mapped_column(String(32), index=True)
+
+    requester_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    approver_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+
+    tool_name: Mapped[str] = mapped_column(String(64))
+    tool_arguments: Mapped[dict] = mapped_column(JSON)
+
+    target_type: Mapped[str] = mapped_column(String(32))
+    target_id: Mapped[str] = mapped_column(String(64))
+
+    expected_current_state: Mapped[dict] = mapped_column(JSON)
+    proposed_state: Mapped[dict] = mapped_column(JSON)
+    justification: Mapped[str] = mapped_column(Text)
+    decision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    executed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+    event_type: Mapped[str] = mapped_column(String(48), index=True)
+    actor_id: Mapped[str] = mapped_column(String(64), index=True)
+    actor_role: Mapped[str] = mapped_column(String(32))
+    on_behalf_of_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    target_type: Mapped[str] = mapped_column(String(32))
+    target_id: Mapped[str] = mapped_column(String(64), index=True)
+
+    before_state: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    after_state: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    tool_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    tool_arguments: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    approval_request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    outcome: Mapped[str] = mapped_column(String(16))
+    error_code: Mapped[str | None] = mapped_column(String(48), nullable=True)
+
