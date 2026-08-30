@@ -1,4 +1,6 @@
 import pytest
+
+pytestmark = pytest.mark.slow
 from fastapi.testclient import TestClient
 
 from nexa.api.main import app
@@ -57,7 +59,7 @@ def test_search_with_valid_token_succeeds(client) -> None:
     token = _token(client, EMPLOYEE)
     response = client.get(
         "/search",
-        params={"q": "كم يوم إجازة سنوية؟"},
+        params={"q": "ÙƒÙ… ÙŠÙˆÙ… Ø¥Ø¬Ø§Ø²Ø© Ø³Ù†ÙˆÙŠØ©ØŸ"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200

@@ -1,6 +1,8 @@
-﻿import sys
+import sys
 
 import pytest
+
+pytestmark = pytest.mark.slow
 
 sys.path.insert(0, "spikes")
 from dataset_v3 import DOCS, QUESTIONS
