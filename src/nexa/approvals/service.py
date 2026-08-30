@@ -175,3 +175,59 @@ def decide(
         session.commit()
 
         return {"ok": executed, "status": request.status, "result": result.data}
+
+def list_pending(viewer: UserContext) -> list[dict]:
+    """Pending requests visible to an approver."""
+    if not has_permission(viewer.role, Permission.APPROVALS_DECIDE):
+        return []
+
+    with Session(engine) as session:
+        rows = session.scalars(
+            select(ApprovalRequest)
+            .where(ApprovalRequest.status == ApprovalStatus.PENDING.value)
+            .order_by(ApprovalRequest.created_at)
+        ).all()
+
+        return [
+            {
+                "id": r.id,
+                "tool_name": r.tool_name,
+                "requester_id": r.requester_id,
+                "target_type": r.target_type,
+                "target_id": r.target_id,
+                "current_state": r.expected_current_state,
+                "proposed_state": r.proposed_state,
+                "justification": r.justification,
+                "created_at": r.created_at.isoformat(),
+                "expires_at": r.expires_at.isoformat(),
+                "can_approve": r.requester_id != viewer.user_id,
+            }
+            for r in rows
+        ]
+
+
+def get_request(request_id: str, viewer: UserContext) -> dict | None:
+    """A requester sees their own requests; approvers see all."""
+    with Session(engine) as session:
+        r = session.get(ApprovalRequest, request_id)
+        if r is None:
+            return None
+
+        is_approver = has_permission(viewer.role, Permission.APPROVALS_DECIDE)
+        if r.requester_id != viewer.user_id and not is_approver:
+            return None
+
+        return {
+            "id": r.id,
+            "status": r.status,
+            "tool_name": r.tool_name,
+            "requester_id": r.requester_id,
+            "approver_id": r.approver_id,
+            "target_id": r.target_id,
+            "current_state": r.expected_current_state,
+            "proposed_state": r.proposed_state,
+            "justification": r.justification,
+            "decision_reason": r.decision_reason,
+            "created_at": r.created_at.isoformat(),
+            "expires_at": r.expires_at.isoformat(),
+        }
